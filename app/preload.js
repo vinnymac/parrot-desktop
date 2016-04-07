@@ -7,10 +7,12 @@ window.onload = function() {
     console.info("TODO Replace GM_xmlhttpRequest");
     return;
   }
+  // TODO grab this from github instead
+
   // ==UserScript==
   // @name         parrot (color multichat for robin!)
   // @namespace    http://tampermonkey.net/
-  // @version      3.64
+  // @version      3.65
   // @description  Recreate Slack on top of an 8 day Reddit project.
   // @author       dashed, voltaek, daegalus, vvvv, orangeredstilton, lost_penguin, AviN456, Annon201, LTAcosta, mofosyne
   // @include      https://www.reddit.com/robin*
@@ -439,6 +441,13 @@ window.onload = function() {
           settings.sidebarPosition ? elements.chat.before(sidebars) : elements.chat.after(sidebars);
       }
 
+      function toggleTableMode(setting) {
+          settings = settings || setting;
+          if (settings.tableMode)
+            $('.robin-chat--message-list').addClass('robin-chat--message-list-table-mode');
+          else $('.robin-chat--message-list').removeClass('robin-chat--message-list-table-mode');
+      }
+
       function grabStandings() {
           var standings;
 
@@ -669,6 +678,8 @@ window.onload = function() {
       Settings.addBool("force_scroll", "Force scroll to bottom", false);
       Settings.addInput("cipherkey", "16 Character Cipher Key", "Example128BitKey");
       Settings.addInput("maxprune", "Max messages before pruning", "500");
+
+      Settings.addBool("tableMode", "Toggle table-mode for the message list", false, toggleTableMode);
       Settings.addInput("fontsize", "Chat font size", "12");
       Settings.addInput("fontstyle", "Font Style (default Consolas)", "");
       Settings.addBool("alignment", "Right align usernames", true);
@@ -1160,6 +1171,7 @@ window.onload = function() {
               tab.on("click", function() { selectChannel($(this).attr("href")); });
           }
 
+          toggleTableMode();
           selectChannel("");
       }
 
@@ -1267,15 +1279,16 @@ window.onload = function() {
               if (!matches || matches[1].length !== 11) return;
 
               var youtubeId = matches[1];
-              var youtubeURL = "//www.youtube.com/embed/" + youtubeId + "?autoplay=1&autohide=1&enablejsapi=1";
-              $videoContainer = $("<div class='video-container' style='width:400px;height:300px;background-color: #000;display:inline-block;position:relative;'><button class='press-play robin-chat--vote' style='margin:auto;position:absolute;top:0px;bottom:0px;left:0px;right:0px;width:100px;height:30px;'>Play Video</button><img style='width:400px;height:300px;' src='" + "//img.youtube.com/vi/" + youtubeId + "/hqdefault.jpg" + "' /></div>");
+              $videoContainer = $("<div class='video-container' style='width:400px;height:300px;background-color: #000;display:inline-block;position:relative;'><button class='press-play robin-chat--vote' style='margin:auto;position:absolute;top:0px;bottom:0px;left:0px;right:0px;width:100px;height:30px;' value='"+youtubeId+"' >Play Video</button><img style='width:400px;height:300px;' src='" + "//img.youtube.com/vi/" + youtubeId + "/hqdefault.jpg" + "' /></div>");
 
               $(elem).find('.robin-message--message').append($videoContainer);
 
-              var iframe = "<iframe class='media-embed' type='text/html' width=400 height=300 src='"+ youtubeURL + "' frameBorder=0 allowFullScreen />";
               $videoContainer.find(".press-play").on("click", function() {
                   $(this).off();
-                  $videoContainer.html(iframe);
+                  var youtubeId = $(this).val();
+                  var youtubeURL = "//www.youtube.com/embed/" + youtubeId + "?autoplay=1&autohide=1&enablejsapi=1";
+                  var iframe = "<iframe class='media-embed' type='text/html' width=400 height=300 src='"+ youtubeURL + "' frameBorder=0 allowFullScreen />";
+                  $(this).parent().html(iframe);
               });
           }
       }
@@ -1479,6 +1492,10 @@ window.onload = function() {
           if (index >= 0)
               chanName = chanName.substring(0, index);
 
+          index = chanName.indexOf("em:");
+          if (index >= 0)
+              chanName = chanName.substring(0, index);
+
           index = chanName.indexOf(" ");
           if (index >= 0)
               chanName = chanName.substring(0, index);
@@ -1566,6 +1583,35 @@ window.onload = function() {
                           $(jq[0]).find('.robin-message--message').text(chanName+"<Crypto> "+decryptedText.substring(5));
                           messageText = $message.text();
                       }
+  					if (decryptedText.substring(5).toLowerCase().indexOf(currentUsersName.toLowerCase()) !== -1) {
+                         $message.parent().css("background","#FFA27F");
+                         notifAudio.play();
+                         userIsMentioned = true;
+  					}
+  					else {
+
+                      //still show mentions in highlight color.
+
+                      var result = hasChannel(decryptedText.substring(5), getChannelString());
+
+                      if(result.has) {
+                          $message.parent().css("background", colors_match[result.name]);
+                      }
+  					else {
+
+                      var is_not_in_channels = (settings.filterChannel &&
+                           !jq.hasClass('robin--user-class--system') &&
+                           String(getChannelString()).length > 0 &&
+                           !results_chan.has);
+
+                          if (is_not_in_channels) {
+                              $message = null;
+                              $(jq[0]).remove();
+
+                              return;
+                          }
+                      }
+  					}
                   }
 
                   var is_muted = (thisUser && mutedList.indexOf(thisUser) >= 0);
@@ -1592,10 +1638,13 @@ window.onload = function() {
                   if (String(settings['username_bg']).length > 0) {
                       $user.css("background",  String(settings['username_bg']));
                   }
+                  if (settings['tableMode'] && settings['alignment']) {
+                      $user.addClass('robin--username-align-right');
+                  }
 
                   var alignedUser = settings['alignment'] ? $user.html().lpad('&nbsp;', 20) : $user.html().rpad('&nbsp;', 20);
 
-                  $user.html(alignedUser);
+                  $user.html( (!settings['tableMode'] ? alignedUser : $user.html()) );
                   var stylecalc = "";
                   if (settings.fontstyle !== ""){
                       stylecalc = '"'+settings.fontstyle.trim()+'"' + ",";
@@ -1673,7 +1722,9 @@ window.onload = function() {
                   if (!results_chan.has || !settings.removeChanMessageFromGlobal)
                       markChannelChanged(-1);
 
-                  if (!settings.removeChanMessageFromGlobal)
+                  // If user is [robin], then we should only add the channel prefix if we're in
+                  // the Global channel.
+                  if (!settings.removeChanMessageFromGlobal && (thisUser.indexOf("[robin]") ==-1 || selectedChannel == -1))
                   {
                       if (results_chan.has) {
                           messageText = messageText.substring(results_chan.name.length).trim();
@@ -1683,7 +1734,7 @@ window.onload = function() {
                       // This needs to be done after any changes to the $message.text() since they will overwrite $message.html() changes
                       convertTextToSpecial(messageText, jq[0]);
 
-                      $("<span class='robin-message--from'><strong>" + results_chan.name.lpad("&nbsp", 6) + "</strong></span>").css("font-family", '"Lucida Console", Monaco, monospace')
+                      $("<span class='robin-message--from'><strong>" + (!settings.tableMode ? results_chan.name.lpad("&nbsp", 6) : results_chan.name ) + "</strong></span>").css("font-family", '"Lucida Console", Monaco, monospace')
                           .css("font-size", "12px")
                           .insertAfter($timestamp);
                   }
@@ -1944,6 +1995,9 @@ window.onload = function() {
           }
       })();
 
+      // Add blank channel to initial system messages to avoid messing up the table view
+      $('.robin--user-class--system time').after('<span class="robin-message--from"></span>');
+
       GM_addStyle(" \
           .robin--username { \
               cursor: pointer \
@@ -2152,21 +2206,19 @@ window.onload = function() {
           } \
       \
           /* Styles for tab bar */ \
+          .robin-chat .robin-chat--header { \
+              padding: 10px 20px 20px 20px !important; \
+          } \
           [id^='robinChannelLink'] { \
               width:10%; \
               display:inline-block; \
           } \
-          #robinChannelList {         \
-              width: 72%!important;   \
-              top: 105px!important;   \
-          }  \
           ul#robinChannelList { \
               list-style-type: none; \
               margin: 0px; \
               padding:0.3em 0; \
               position:absolute; \
-              top:95px; \
-              width:85%; \
+              top:97px; \
           } \
           ul#robinChannelList li { \
               display: inline; \
@@ -2177,9 +2229,11 @@ window.onload = function() {
               background-color: #dedbde; \
               border: 1px solid #c9c3ba; \
               border-bottom: none; \
-              padding:2px 30px!important; \
+              padding:2px 5px!important; \
               text-decoration: none; \
               font-size:1em; \
+              min-width: 60px; \
+              text-align: center; \
           } \
           ul#robinChannelList li a:hover { \
               background-color: #f1f0ee; \
@@ -2193,6 +2247,24 @@ window.onload = function() {
               background-color: white; \
               font-weight: bold; \
               padding: 0.7em 0.3em 0.38em 0.3em; \
+          } \
+          .robin-chat .robin-chat--message-list.robin-chat--message-list-table-mode { \
+              display: table; \
+          } \
+          .robin-chat--message-list-table-mode .robin-message { \
+              display: table-row !important; \
+          } \
+          .robin-chat--message-list-table-mode time, .robin-chat--message-list-table-mode .robin-message span { \
+              display: table-cell !important; \
+              padding: 0 5px; \
+          } \
+          .robin-chat--message-list-table-mode .robin-message time, .robin-chat--message-list-table-mode .robin-message .robin-message--from { \
+              white-space: nowrap; \
+              word-break: normal; \
+              word-wrap: normal; \
+          } \
+          .robin-chat--message-list-table-mode .robin--username-align-right { \
+              text-align: right; \
           } \
       ");
   })();

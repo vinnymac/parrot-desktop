@@ -77,31 +77,29 @@ gulp.task "buildApp", (done) ->
     if err then console.error err
     done()
 
-# TODO Build install generation
+gulp.task "generateDMG", (done) ->
+  console.log "Generating DMG..."
+  ee = appdmg
+    source: "./config/appdmg.json"
+    target: "#{BUILD_PATH}Parrot-darwin-x64/Parrot.dmg"
 
-# gulp.task "generateDMG", (done) ->
-#   console.log "Generating DMG..."
-#   ee = appdmg
-#     source: "./config/appdmg.json"
-#     target: "#{BUILD_PATH}Parrot-darwin-x64/Parrot.dmg"
-#
-#   ee.on "error", (err) ->
-#     console.error "DMG generation failed with: ", err
-#     done()
-#
-#   ee.on "finish", ->
-#     console.log "DMG generation complete."
-#     done()
-#
-#
-# gulp.task "generateWindowsInstaller", shell.task [
-#   "makensis -Denvironment=#{ENV.name} config/win32_installer.nsi"
-# ], errorMessage: "Error occurred while generating Windows installer"
-#
-#
-# gulp.task "generateWindowsAdminInstaller", shell.task [
-#   "makensis -Denvironment=#{ENV.name} config/win32_admin_installer.nsi"
-# ], errorMessage: "Error occurred while generating Windows installer"
+  ee.on "error", (err) ->
+    console.error "DMG generation failed with: ", err
+    done()
+
+  ee.on "finish", ->
+    console.log "DMG generation complete."
+    done()
+
+
+gulp.task "generateWindowsInstaller", shell.task [
+  "makensis -Denvironment=#{ENV.name} config/win32_installer.nsi"
+], errorMessage: "Error occurred while generating Windows installer"
+
+
+gulp.task "generateWindowsAdminInstaller", shell.task [
+  "makensis -Denvironment=#{ENV.name} config/win32_admin_installer.nsi"
+], errorMessage: "Error occurred while generating Windows installer"
 
 
 gulp.task "build", (done) ->
@@ -112,9 +110,9 @@ gulp.task "build", (done) ->
               "removeUnnecessaryPackages",
               "flattenPackages",
               "buildApp",
-              # "generateDMG",
-              # "generateWindowsInstaller",
-              # "generateWindowsAdminInstaller",
+              "generateDMG",
+              "generateWindowsInstaller",
+              "generateWindowsAdminInstaller",
               done
 
 gulp.task "fastBuild", (done) ->
@@ -125,5 +123,5 @@ gulp.task "fastBuild", (done) ->
               "removeUnnecessaryPackages",
               "flattenPackages",
               "buildApp",
-              # "generateWindowsInstaller",
+              "generateWindowsInstaller",
               done

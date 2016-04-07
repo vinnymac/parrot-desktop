@@ -9,7 +9,7 @@ Robin now on your desk near the top. This project aims to alleviate issues users
 * [WIP](#wip)
 * [TODO](#todo)
 * [Usage](#usage)
-    * [Develop](#develop)
+    * [Setup](#setup)
     * [Build](#build)
 * [Author](#author)
 
@@ -34,13 +34,27 @@ Feature ideas for Parrot Desktop
 <a name="usage"/>
 # Usage
 
-<a name="develop"/>
-## Develop
+<a name="setup"/>
+# Setup
 
 ```bash
-npm install
-gulp
+npm install && npm install -g gulp electron-prebuilt flatten-packages
+
+# Required for making the Windows installer
+brew install makensis
+
+# Required for setting the Windows app icon from OS X or Linux
+brew install wine
+
 ```
+
+For the Windows Installer:
+
+The [NsProcess plugin](http://nsis.sourceforge.net/NsProcess_plugin) needs to be manually installed as well.
+Once extracted, copy the files from the `Include` directory
+to `/usr/local/Cellar/makensis/2.50/share/nsis/Include`,
+and the files from the `Plugin` directory to
+`/usr/local/Cellar/makensis/2.50/share/nsis/Plugins`.
 
 
 <a name="build"/>

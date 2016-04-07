@@ -1,9 +1,10 @@
 window.onload = function() {
-  function GM_addStyle() {
-    return;
+  function GM_addStyle(style) {
+    $("head").append('<style type="text/css">' + style + '</style>');
   }
 
-  function GM_xmlhttpRequest() {
+  function GM_xmlhttpRequest(options) {
+    console.info("TODO Replace GM_xmlhttpRequest");
     return;
   }
   // ==UserScript==

@@ -3,6 +3,7 @@ Parrot - Robin Desktop Application
 
 Robin now on your desk near the top. This project aims to alleviate issues users are having cross-browser, by giving them a native app and removing the need for extensions and plugins.
 
+![Parrot Example](http://i.imgur.com/Obr5cnD.png)
 
 ##### Table of Contents
 * [WIP](#wip)

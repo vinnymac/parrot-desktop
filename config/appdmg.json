@@ -1,0 +1,9 @@
+{
+  "title": "Parrot Desktop App",
+  "background": "../app/assets/dmg-bg.png",
+  "icon-size": 80,
+  "contents": [
+    { "x": 150, "y": 185, "type": "file", "path": "../dist/build/Parrot-darwin-x64/Parrot.app" },
+    { "x": 355, "y": 185, "type": "link", "path": "/Applications" }
+  ]
+}

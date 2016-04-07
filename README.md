@@ -5,8 +5,8 @@ Robin now on your desk near the top. This project aims to alleviate issues users
 
 
 ##### Table of Contents
-# [WIP](#wip)
-# [TODO](#todo)
+* [WIP](#wip)
+* [TODO](#todo)
 * [Usage](#usage)
     * [Develop](#develop)
     * [Build](#build)

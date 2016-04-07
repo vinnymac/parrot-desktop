@@ -25,7 +25,9 @@ Feature ideas for Parrot Desktop
 
 * Babel instead of coffee
 * Lodash instead of underscore
-* Add Parrot script
+* ~~Add Parrot script~~
+* ~~Replace GM_addStyle~~
+* Replace GM_xmlhttpRequest
 * Add icons
 * Prevent navigation outside of login and robin
 
